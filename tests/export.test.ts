@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { splitSnapshot } from '../src/endpoint/export'
+import { splitSnapshot, findOrphanedFiles } from '../src/endpoint/export'
 import type { DirectusSnapshot, SchemaConfig } from '../src/endpoint/types'
 
 const DEFAULT_CONFIG: SchemaConfig = {
@@ -128,5 +128,31 @@ describe('splitSnapshot', () => {
     const config = { ...DEFAULT_CONFIG, ignoreSystemCollections: false }
     const { collections } = splitSnapshot(snapshot, config)
     expect(collections.has('directus_files')).toBe(true)
+  })
+})
+
+describe('findOrphanedFiles', () => {
+  it('returns json files whose collection no longer exists', () => {
+    const existing = ['zbr_pages.json', 'generic_content.json', '_meta.json']
+    const orphaned = findOrphanedFiles(existing, ['zbr_pages'])
+    expect(orphaned).toEqual(['generic_content.json'])
+  })
+
+  it('never returns _meta.json', () => {
+    const existing = ['_meta.json']
+    const orphaned = findOrphanedFiles(existing, [])
+    expect(orphaned).toEqual([])
+  })
+
+  it('ignores non-json files', () => {
+    const existing = ['zbr_pages.json', 'README.md']
+    const orphaned = findOrphanedFiles(existing, [])
+    expect(orphaned).toEqual(['zbr_pages.json'])
+  })
+
+  it('returns an empty array when everything on disk still matches a current collection', () => {
+    const existing = ['zbr_pages.json', 'zbr_content.json', '_meta.json']
+    const orphaned = findOrphanedFiles(existing, ['zbr_pages', 'zbr_content'])
+    expect(orphaned).toEqual([])
   })
 })

@@ -32,3 +32,8 @@ export function splitSnapshot(
 
   return { meta, collections: result }
 }
+
+export function findOrphanedFiles(existingFiles: string[], currentNames: Iterable<string>): string[] {
+  const currentFiles = new Set([...currentNames].map((name) => `${name}.json`))
+  return existingFiles.filter((file) => file.endsWith('.json') && file !== '_meta.json' && !currentFiles.has(file))
+}
