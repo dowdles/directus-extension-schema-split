@@ -8,7 +8,9 @@ export function mergeSnapshots(
     version: meta.version,
     directus: meta.directus,
     vendor: meta.vendor,
-    collections: collections.map((c) => c.collection),
+    collections: collections
+      .map((c) => c.collection)
+      .filter((c): c is Record<string, unknown> => c !== undefined),
     fields: collections.flatMap((c) => c.fields),
     relations: collections.flatMap((c) => c.relations),
   }

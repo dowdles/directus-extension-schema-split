@@ -60,4 +60,21 @@ describe('mergeSnapshots', () => {
     expect(snapshot.fields[1]?.['field']).toBe('title')
     expect(snapshot.fields[2]?.['field']).toBe('id')
   })
+
+  it('omits collection-less entries from snapshot.collections but keeps their fields', () => {
+    const withFieldOnly: CollectionSnapshot[] = [
+      ...COLLECTIONS,
+      {
+        fields: [{ collection: 'directus_files', field: 'custom_alt_text' }],
+        relations: [],
+      },
+    ]
+    const snapshot = mergeSnapshots(META, withFieldOnly)
+    expect(snapshot.collections).toHaveLength(2)
+    expect(snapshot.collections.map((c) => c['collection'])).toEqual(['zbr_pages', 'zbr_content'])
+    expect(snapshot.fields).toHaveLength(4)
+    expect(
+      snapshot.fields.some((f) => f['collection'] === 'directus_files' && f['field'] === 'custom_alt_text'),
+    ).toBe(true)
+  })
 })
