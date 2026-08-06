@@ -7,7 +7,7 @@ export interface SchemaConfig {
 }
 
 export interface CollectionSnapshot {
-  collection: Record<string, unknown>
+  collection?: Record<string, unknown>
   fields: Record<string, unknown>[]
   relations: Record<string, unknown>[]
 }
