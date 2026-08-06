@@ -83,10 +83,12 @@ export default defineEndpoint({
 
         const schema = await getSchema()
         const service = new SchemaService({ knex: database, schema, accountability: req.accountability })
-        const diff = await service.diff(snapshot)
+        const currentSnapshot = await service.snapshot()
+        const snapshotDiff = await service.diff(snapshot, { currentSnapshot })
 
-        if (diff) {
-          await service.apply(diff)
+        if (snapshotDiff) {
+          const { hash } = service.getHashedSnapshot(currentSnapshot)
+          await service.apply({ hash, diff: snapshotDiff })
           res.json({ applied: true, collections: collections.length })
         } else {
           res.json({ applied: false, message: 'No changes detected' })
