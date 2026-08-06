@@ -1,8 +1,8 @@
 import { defineEndpoint } from '@directus/extensions-sdk'
-import { mkdir, readdir, readFile, writeFile } from 'fs/promises'
+import { mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises'
 import { join, resolve } from 'path'
 import { loadConfig } from './config.js'
-import { splitSnapshot } from './export.js'
+import { splitSnapshot, findOrphanedFiles } from './export.js'
 import { mergeSnapshots } from './import.js'
 import type { CollectionSnapshot, SnapshotMeta } from './types.js'
 
@@ -34,7 +34,16 @@ export default defineEndpoint({
           await writeFile(join(outputDir, `${name}.json`), JSON.stringify(data, null, indent))
         }
 
-        res.json({ exported: collections.size, outputDir })
+        const existing = await readdir(outputDir).catch(() => [])
+        const orphaned = findOrphanedFiles(existing, collections.keys())
+        for (const file of orphaned) {
+          await unlink(join(outputDir, file))
+        }
+        if (orphaned.length > 0) {
+          logger.info(`Removed ${orphaned.length} orphaned file(s): ${orphaned.join(', ')}`)
+        }
+
+        res.json({ exported: collections.size, outputDir, removed: orphaned.length })
       } catch (error) {
         logger.error(error)
         res.status(500).json({ error: String(error) })

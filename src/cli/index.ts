@@ -122,12 +122,15 @@ if (command === 'export') {
     const res = await fetch(`${config.url}/schema-sync/export`, {
       headers: { Authorization: `Bearer ${config.token}` },
     })
-    const data = await res.json() as { exported?: number; outputDir?: string; error?: string }
+    const data = await res.json() as { exported?: number; outputDir?: string; removed?: number; error?: string }
     if (!res.ok) {
       console.error('Export failed:', data.error ?? res.statusText)
       process.exit(1)
     }
     console.log(`Exported ${data.exported} collections to ${data.outputDir}`)
+    if (data.removed) {
+      console.log(`Removed ${data.removed} orphaned file(s)`)
+    }
   }
 } else if (command === 'import') {
   if (!config.token) {
