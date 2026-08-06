@@ -41,11 +41,11 @@ GET /schema-sync/export
 Authorization: Bearer <token>
 ```
 
-Reads the current schema, splits it by collection, and writes JSON files to the configured output directory.
+Reads the current schema, splits it by collection, and writes JSON files to the configured output directory. Orphaned `.json` files (corresponding to collections no longer in the schema) are automatically deleted; `_meta.json` and non-JSON files are never removed.
 
 **Response:**
 ```json
-{ "exported": 12, "outputDir": "/directus/snapshots/split" }
+{ "exported": 12, "outputDir": "/directus/snapshots/split", "removed": 0 }
 ```
 
 ### Import
