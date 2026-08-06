@@ -9,7 +9,10 @@ export function splitSnapshot(
 
   const collectionsByName = new Map(collections.map((c) => [c['collection'] as string, c]))
   const names = new Set(collectionsByName.keys())
-  for (const field of fields) names.add(field['collection'] as string)
+  for (const field of fields) {
+    const name = field['collection'] as string | undefined
+    if (name) names.add(name)
+  }
 
   const result = new Map<string, CollectionSnapshot>()
 
