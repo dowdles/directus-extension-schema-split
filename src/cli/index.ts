@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'fs'
 import { mkdir, readdir, readFile, unlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join, resolve } from 'path'
-import { splitSnapshot } from '../endpoint/export.js'
+import { splitSnapshot, findOrphanedFiles } from '../endpoint/export.js'
 import { mergeSnapshots } from '../endpoint/import.js'
 import type { CollectionSnapshot, DirectusSnapshot, SchemaConfig, SnapshotMeta } from '../endpoint/types.js'
 import { getFlag, parseCliConfig } from './args.js'
@@ -58,7 +58,15 @@ async function directExport(config: CliConfig): Promise<void> {
     for (const [name, data] of collections) {
       await writeFile(join(outputDir, `${name}.json`), JSON.stringify(data, null, indent))
     }
+    const existing = await readdir(outputDir).catch(() => [])
+    const orphaned = findOrphanedFiles(existing, collections.keys())
+    for (const file of orphaned) {
+      await unlink(join(outputDir, file))
+    }
     console.log(`Exported ${collections.size} collections to ${outputDir}`)
+    if (orphaned.length > 0) {
+      console.log(`Removed ${orphaned.length} orphaned file(s): ${orphaned.join(', ')}`)
+    }
   } finally {
     await unlink(tmpFile).catch(() => {})
   }
