@@ -7,16 +7,21 @@ export function splitSnapshot(
 ): { meta: SnapshotMeta; collections: Map<string, CollectionSnapshot> } {
   const { version, directus, vendor, collections, fields, systemFields, relations } = snapshot
 
+  const collectionsByName = new Map(collections.map((c) => [c['collection'] as string, c]))
+  const names = new Set(collectionsByName.keys())
+  for (const field of fields) names.add(field['collection'] as string)
+
   const result = new Map<string, CollectionSnapshot>()
 
-  for (const collection of collections) {
-    const name = collection['collection'] as string
+  for (const name of names) {
     if (!shouldInclude(name, config)) continue
-    result.set(name, {
-      collection,
+    const collection = collectionsByName.get(name)
+    const entry: CollectionSnapshot = {
       fields: fields.filter((f) => f['collection'] === name),
       relations: relations.filter((r) => r['collection'] === name),
-    })
+    }
+    if (collection) entry.collection = collection
+    result.set(name, entry)
   }
 
   const meta: SnapshotMeta = { version, directus, vendor }

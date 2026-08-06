@@ -87,4 +87,46 @@ describe('splitSnapshot', () => {
     const { collections } = splitSnapshot(empty, DEFAULT_CONFIG)
     expect(collections.size).toBe(0)
   })
+
+  it('includes a field-only system collection when explicitly included', () => {
+    const snapshot: DirectusSnapshot = {
+      ...MOCK_SNAPSHOT,
+      fields: [
+        ...MOCK_SNAPSHOT.fields,
+        { collection: 'directus_files', field: 'custom_alt_text' },
+      ],
+    }
+    const config = { ...DEFAULT_CONFIG, includeSystemCollections: ['directus_files'] }
+    const { collections } = splitSnapshot(snapshot, config)
+    expect(collections.has('directus_files')).toBe(true)
+    expect(collections.get('directus_files')?.collection).toBeUndefined()
+    expect(collections.get('directus_files')?.fields).toEqual([
+      { collection: 'directus_files', field: 'custom_alt_text' },
+    ])
+  })
+
+  it('excludes a field-only system collection when not explicitly included', () => {
+    const snapshot: DirectusSnapshot = {
+      ...MOCK_SNAPSHOT,
+      fields: [
+        ...MOCK_SNAPSHOT.fields,
+        { collection: 'directus_files', field: 'custom_alt_text' },
+      ],
+    }
+    const { collections } = splitSnapshot(snapshot, DEFAULT_CONFIG)
+    expect(collections.has('directus_files')).toBe(false)
+  })
+
+  it('includes a field-only system collection when ignoreSystemCollections is false', () => {
+    const snapshot: DirectusSnapshot = {
+      ...MOCK_SNAPSHOT,
+      fields: [
+        ...MOCK_SNAPSHOT.fields,
+        { collection: 'directus_files', field: 'custom_alt_text' },
+      ],
+    }
+    const config = { ...DEFAULT_CONFIG, ignoreSystemCollections: false }
+    const { collections } = splitSnapshot(snapshot, config)
+    expect(collections.has('directus_files')).toBe(true)
+  })
 })
